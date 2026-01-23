@@ -1,3 +1,5 @@
+.PHONY: all user
+
 # Путь к исходным proto
 PROTO_SRC=.
 
@@ -18,7 +20,8 @@ all: user
 
 user:
 	@echo "Generating Go files from proto..."
-	$(PROTOC) \
+	mkdir -p $(PROTO_OUT)
+	protoc \
 		--proto_path=$(PROTO_SRC) \
 		--go_out=$(PROTO_OUT) \
 		--go_opt=paths=source_relative \
