@@ -10,16 +10,21 @@ import (
 
 type UserHandler struct {
 	userv1.UnimplementedUserServiceServer
-	svc *service.UserService
+	svc service.UserService
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
+func NewUserHandler(svc service.UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
 func (h *UserHandler) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
-	// TODO: логика через сервис + репозиторий
-	return &userv1.CreateUserResponse{Id: 1}, nil
+	id, err := h.svc.CreateUser(ctx, req.Email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &userv1.CreateUserResponse{Id: id}, nil
 }
 
 func (h *UserHandler) GetUserByID(ctx context.Context, req *userv1.GetUserByIDRequest) (*userv1.GetUserResponse, error) {

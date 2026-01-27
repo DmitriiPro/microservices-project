@@ -4,41 +4,58 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/DmitriiPro/user-service/internal/cache"
+	"github.com/DmitriiPro/user-service/internal/model"
 	"github.com/DmitriiPro/user-service/internal/repository"
 	"github.com/redis/go-redis/v9"
 )
 
-type UserService struct {
-	repo  *repository.UserRepository
-	redis *ClientWrapper
+type UserService interface {
+	GetUserByID(ctx context.Context, id int64) (*model.User, error)
+	CreateUser(ctx context.Context, email string) (int64, error)
+}
+
+type userService struct {
+	repo  repository.UserRepository
+	cache cache.Cache
 }
 
 type ClientWrapper struct {
 	Client *redis.Client
 }
 
-func NewUserService(repo *repository.UserRepository, rdb *redis.Client) *UserService {
-	return &UserService{
-		repo:  repo,
-		redis: &ClientWrapper{Client: rdb},
-	}
+func NewUserService(repo repository.UserRepository, cache cache.Cache) UserService {
+	return &userService{repo: repo, cache: cache}
 }
-	
-var (
-	TTLTimeRedis = (time.Minute * 25)
-)
 
-func (s *UserService) GetUserByID(ctx context.Context, id int64) (*repository.User, error) {
+func (s *userService) CreateUser(ctx context.Context, email string) (int64, error) {
+	 id, err := s.repo.CreateUser(ctx, email)
+
+	 if err != nil {
+			return 0, err
+	 }
+	 
+	 key := fmt.Sprintf("user:%d", id)
+	 user := model.User{
+		 ID:    id,
+		 Email: email,
+	 }
+
+	 data, _ := json.Marshal(user)
+	 s.cache.Set(ctx, key, string(data))
+
+	 return id, nil
+}
+
+func (s *userService) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
 	key := fmt.Sprintf("user:%d", id)
 
 	// redis cache
-	valueRedis, err := s.redis.Client.Get(cache.Ctx, key).Result()
+	valueRedis, err := s.cache.Get(ctx, key)
 
 	if err == nil {
-		var user repository.User
+		var user model.User
 		json.Unmarshal([]byte(valueRedis), &user)
 		return &user, nil
 	}
@@ -51,7 +68,7 @@ func (s *UserService) GetUserByID(ctx context.Context, id int64) (*repository.Us
 
 	// save to redis
 	data, _ := json.Marshal(user)
-	s.redis.Client.Set(cache.Ctx, key, data, TTLTimeRedis)
+	s.cache.Set(ctx, key, string(data))
 
 	return user, nil
 }

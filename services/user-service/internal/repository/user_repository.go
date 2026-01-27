@@ -3,24 +3,24 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"time"
+
+	"github.com/DmitriiPro/user-service/internal/model"
 )
 
-type User struct {
-	ID        int64
-	Email     string
-	CreatedAt time.Time
+type UserRepository interface {
+	CreateUser(ctx context.Context, email string) (int64, error)
+	GetUserByID(ctx context.Context, id int64) (*model.User, error)
 }
 
-type UserRepository struct {
+type postgresRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &postgresRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, email string) (int64, error) {
+func (r *postgresRepository) CreateUser(ctx context.Context, email string) (int64, error) {
 	query := `INSERT INTO users (email) VALUES ($1) RETURNING id`
 	var id int64
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&id)
@@ -32,9 +32,9 @@ func (r *UserRepository) CreateUser(ctx context.Context, email string) (int64, e
 	return id, nil
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*User, error) {
+func (r *postgresRepository) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
 	query := `SELECT id, email, created_at FROM users WHERE id = $1`	
-	var user User
+	var user model.User
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Email, &user.CreatedAt)
 
 	if err != nil {
