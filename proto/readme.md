@@ -24,3 +24,10 @@ protoc-gen-openapiv2 --version
 
 cd proto
 make
+
+
+Нужно скачать google api protos (1 раз)
+
+В папке proto/:
+
+git clone https://github.com/googleapis/googleapis

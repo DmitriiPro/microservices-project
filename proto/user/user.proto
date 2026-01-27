@@ -5,10 +5,22 @@ package user.v1;
 option go_package = "github.com/DmitriiPro/microservices-proto/user/v1;userv1";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 service UserService {
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
-  rpc GetUserByID(GetUserByIDRequest) returns (GetUserResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option(google.api.http) = {
+      post: "/v1/users"
+      body: "*"
+    };
+  }
+
+  rpc GetUserByID(GetUserByIDRequest) returns (GetUserResponse) {
+    option(google.api.http) = {
+      get: "/v1/users/{id}"
+    };
+  }
+  
 }
 
 message GetUserResponse {
