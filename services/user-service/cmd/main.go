@@ -20,17 +20,16 @@ import (
 func main() {
 	cfg := config.Load()
 
-	// db postgres 
+	// db postgres
 	dbConn := db.NewPostgres(cfg.PostgresDSN)
 	defer dbConn.Close()
 
-	// db redis 
+	// db redis
 	redisClient := cache.NewRedis(cfg.RedisAddr)
 
 	repo := repository.NewUserRepository(dbConn)
 	service := service.NewUserService(repo, redisClient)
 	handler := handler.NewUserHandler(service)
-
 
 	//* starting gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", cfg.GRPCPort))
@@ -43,8 +42,8 @@ func main() {
 
 	userv1.RegisterUserServiceServer(s, handler)
 
-	log.Printf("User service is running on %v\n", fmt.Sprintf("localhost:%d", GrpcServerPORT))
-	
+	log.Printf("User service is running on %v\n", fmt.Sprintf("localhost:%d", cfg.GRPCPort))
+
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
