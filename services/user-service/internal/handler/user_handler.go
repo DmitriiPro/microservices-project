@@ -4,14 +4,17 @@ import (
 	"context"
 
 	userv1 "github.com/DmitriiPro/user-service/internal/pb/user"
+	"github.com/DmitriiPro/user-service/internal/service"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type UserHandler struct {
 	userv1.UnimplementedUserServiceServer
+	svc *service.UserService
 }
 
-func NewUserHandler() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(svc *service.UserService) *UserHandler {
+	return &UserHandler{svc: svc}
 }
 
 func (h *UserHandler) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
@@ -20,10 +23,16 @@ func (h *UserHandler) CreateUser(ctx context.Context, req *userv1.CreateUserRequ
 }
 
 func (h *UserHandler) GetUserByID(ctx context.Context, req *userv1.GetUserByIDRequest) (*userv1.GetUserResponse, error) {
-	// TODO: логика через сервис + репозиторий
+
+	user, err := h.svc.GetUserByID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+
 	return &userv1.GetUserResponse{
-		Id:        req.Id,
-		Email:     "test@example.com",
-		CreatedAt: nil, // пока nil, позже будет timestamppb.Now()
+		Id:        user.ID,
+		Email:     user.Email,
+		CreatedAt: timestamppb.New(user.CreatedAt), // пока nil, позже будет timestamppb.Now()
 	}, nil
 }
