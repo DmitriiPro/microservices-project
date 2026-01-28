@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -25,6 +26,7 @@ func Load() *Config {
 		RedisAddr:   os.Getenv("REDIS_ADDR"),
 		GRPCPort:    os.Getenv("GRPC_PORT"),
 	}
+	fmt.Println("cfg", cfg)
 
 	if cfg.PostgresDSN == "" {
 		log.Fatal("POSTGRES_DSN not set")

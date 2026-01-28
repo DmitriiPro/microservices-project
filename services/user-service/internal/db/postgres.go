@@ -15,7 +15,7 @@ func NewPostgres(dsn string) *sql.DB {
 	}
 
 	if err := db.Ping(); err != nil {
-		log.Fatal("postgres not responding:", err)
+		log.Fatalf("postgres ping not responding: %v", err)
 	}
 
 	fmt.Println("Postgres connected")
