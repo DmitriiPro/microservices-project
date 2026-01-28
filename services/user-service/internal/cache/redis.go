@@ -31,6 +31,10 @@ func NewRedis(addr string) Cache {
 	return &redisCache{client: rdb}
 }
 
+func (r *redisCache) Del(ctx context.Context, key string) error {
+	return r.client.Del(ctx, key).Err()
+}
+
 func (r *redisCache) Get(ctx context.Context, key string) (string, error) {
 	return r.client.Get(ctx, key).Result()
 }

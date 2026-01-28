@@ -15,18 +15,25 @@ import (
 	"github.com/DmitriiPro/user-service/internal/config"
 	"github.com/DmitriiPro/user-service/internal/db"
 	"github.com/DmitriiPro/user-service/internal/handler"
+	"github.com/DmitriiPro/user-service/internal/middleware"
 	userv1 "github.com/DmitriiPro/user-service/internal/pb/user"
 	"github.com/DmitriiPro/user-service/internal/repository"
 	"github.com/DmitriiPro/user-service/internal/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"github.com/justinas/alice"
 )
 
 var HTTP_PORT = ":8081"
 
 func main() {
 	cfg := config.Load()
+
+	// Применяем миграции
+	if err := db.RunMigrations(cfg.PostgresDSN); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
 
 	// db postgres
 	dbConn := db.NewPostgres(cfg.PostgresDSN)
@@ -46,10 +53,12 @@ func main() {
 		log.Fatalf("failed to listen starting gRPC server: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(middleware.RecoveryInterceptor()))
 	userv1.RegisterUserServiceServer(s, handler)
 
 	go func() {
+		// Дадим время gRPC серверу запуститься
+		time.Sleep(1 * time.Second)
 		log.Printf("gRPC server started on :%s", cfg.GRPCPort)
 
 		if err := s.Serve(grpcLis); err != nil {
@@ -63,6 +72,7 @@ func main() {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
+	// wrappedMux := middleware.HTTPRecoveryMiddleware(mux)
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
@@ -71,11 +81,21 @@ func main() {
 		log.Fatalf("failed to register gRPC gateway: %v", err)
 	}
 
+	// Создаем цепочку middleware в правильном порядке
+	// Порядок важен: сначала recovery, потом logging
+	// handlerMiddleware := middleware.LoggingMiddleware(middleware.HTTPRecoveryMiddleware(mux))
+
+	// Создаем цепочку middleware
+	chain := alice.New(
+		middleware.HTTPRecoveryMiddleware, // Восстановление после паники
+		middleware.LoggingMiddleware,      // Логирование
+	).Then(mux)
+
 	httpServer := &http.Server{
 		Addr:         HTTP_PORT,
-		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Handler:      chain,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 

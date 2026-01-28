@@ -20,8 +20,9 @@ docker-compose up -d
 
 Применяем миграции:
 
-migrate -path ./migrations -database "postgres://user:password@localhost:5432/users" up
 
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5433/users?sslmode=disable" up
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5433/users?sslmode=disable" down
 
 Запускаем сервис:
 

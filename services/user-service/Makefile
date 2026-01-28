@@ -1,7 +1,7 @@
 # ===================================
 # Конфигурация
 # ===================================
-POSTGRES_DSN=postgres://user:password@localhost:5432/users?sslmode=disable
+POSTGRES_DSN=postgres://user:password@localhost:5433/users?sslmode=disable
 MIGRATION_DIR=./migrations
 DOCKER_COMPOSE=docker-compose
 APP_CMD=go run cmd/main.go
