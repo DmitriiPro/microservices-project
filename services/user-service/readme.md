@@ -29,3 +29,7 @@ migrate -path ./migrations -database "postgres://postgres:password@localhost:543
 go run cmd/main.go
 
 docker exec -it user_postgres psql -U user -d users
+
+go get github.com/swaggo/http-swagger
+
+http://localhost:8082/swagger/index.html

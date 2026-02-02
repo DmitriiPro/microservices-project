@@ -24,6 +24,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var HTTP_PORT = ":8081"
@@ -128,6 +130,12 @@ func main() {
 	// )
 	mux := runtime.NewServeMux()
 
+	//! ===== Swagger JSON endpoint =====
+	mux.HandlePath("GET", "/swagger.json", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+		// http.ServeFile(w, r, "../swagger/user.swagger.json")
+		http.ServeFile(w, r, "./swagger/user/user.swagger.json")
+	})
+
 	// err = userv1.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
 	err = userv1.RegisterUserServiceHandlerClient(ctx, mux, userv1.NewUserServiceClient(conn))
 	if err != nil {
@@ -148,6 +156,7 @@ func main() {
 
 	// Создаем цепочку middleware
 	chain := alice.New(
+		middleware.CORSMiddleware,				// CORS
 		middleware.HTTPRecoveryMiddleware, // Восстановление после паники
 		middleware.LoggingMiddleware,      // Логирование
 	).Then(mux)
@@ -167,12 +176,23 @@ func main() {
 		}
 	}()
 
+	//! ===== Swagger UI server =====
+	go func() {
+		log.Println("Swagger UI started on :8082")
+		err := http.ListenAndServe(":8082", httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:8081/swagger.json"),
+		))
+		if err != nil {
+			log.Fatalf("failed to serve swagger: %v", err)
+		}
+	}()
+
 	//! ================= GRACEFUL SHUTDOWN =================
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 	log.Println("Shutting down servers...")
-	
+
 	cancel()
 	conn.Close() // ✅ Закрываем соединение
 
