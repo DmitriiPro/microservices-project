@@ -44,3 +44,5 @@ cd proto/
 
 # Скачиваем PGV proto файлы
 git clone https://github.com/envoyproxy/protoc-gen-validate.git validate
+
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
