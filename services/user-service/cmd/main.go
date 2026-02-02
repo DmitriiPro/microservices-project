@@ -73,9 +73,7 @@ func main() {
 	userv1.RegisterUserServiceServer(s, handler)
 
 	// ✅ Запускаем gRPC сервер синхронно в горутине
-
 	go func() {
-		// Дадим время gRPC серверу запуститься
 		log.Printf("gRPC server started on :%s", cfg.GRPCPort)
 
 		if err := s.Serve(grpcLis); err != nil {
@@ -121,15 +119,16 @@ func main() {
 
 	log.Printf("✅ gRPC connection established, state: %v", conn.GetState())
 
-	mux := runtime.NewServeMux(
-		// ✅ Добавьте обработку ошибок
-		runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
-			log.Printf("Gateway error: %v", err)
-			runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
-		}),
-	)
+	// mux := runtime.NewServeMux(
+	// 	 Добавьте обработку ошибок
+	// 	runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+	// 		log.Printf("Gateway error: %v", err)
+	// 		runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
+	// 	}),
+	// )
+	mux := runtime.NewServeMux()
 
-	// err = userv1.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)/
+	// err = userv1.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
 	err = userv1.RegisterUserServiceHandlerClient(ctx, mux, userv1.NewUserServiceClient(conn))
 	if err != nil {
 		log.Fatalf("failed to register gRPC gateway: %v", err)
@@ -147,14 +146,9 @@ func main() {
 		log.Println("✅ Connection warmed up")
 	}()
 
-	// Создаем цепочку middleware в правильном порядке
-	// Порядок важен: сначала recovery, потом logging
-	// handlerMiddleware := middleware.LoggingMiddleware(middleware.HTTPRecoveryMiddleware(mux))
-
 	// Создаем цепочку middleware
 	chain := alice.New(
 		middleware.HTTPRecoveryMiddleware, // Восстановление после паники
-		// middleware.DebugMiddleware,        // Отладочное логирование
 		middleware.LoggingMiddleware,      // Логирование
 	).Then(mux)
 
@@ -197,34 +191,34 @@ func main() {
 
 }
 
-// ✅ Функция для тестирования и прогрева gRPC соединения
-func testGRPCConnection(addr string, opts []grpc.DialOption) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+// // ✅ Функция для тестирования и прогрева gRPC соединения
+// func testGRPCConnection(addr string, opts []grpc.DialOption) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	defer cancel()
 
-	// Добавляем WithBlock для синхронного подключения
-	testOpts := append(opts, grpc.WithBlock())
+// 	// Добавляем WithBlock для синхронного подключения
+// 	testOpts := append(opts, grpc.WithBlock())
 
-	conn, err := grpc.DialContext(ctx, addr, testOpts...)
-	if err != nil {
-		return fmt.Errorf("failed to dial gRPC server: %w", err)
-	}
+// 	conn, err := grpc.DialContext(ctx, addr, testOpts...)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to dial gRPC server: %w", err)
+// 	}
 
-	// Проверяем состояние соединения
-	state := conn.GetState()
-	log.Printf("gRPC connection state: %v", state)
+// 	// Проверяем состояние соединения
+// 	state := conn.GetState()
+// 	log.Printf("gRPC connection state: %v", state)
 
-	// Создаём клиент и делаем тестовый запрос (опционально)
-	client := userv1.NewUserServiceClient(conn)
+// 	// Создаём клиент и делаем тестовый запрос (опционально)
+// 	client := userv1.NewUserServiceClient(conn)
 
-	// Пробуем получить несуществующего пользователя для прогрева
-	testCtx, testCancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer testCancel()
+// 	// Пробуем получить несуществующего пользователя для прогрева
+// 	testCtx, testCancel := context.WithTimeout(context.Background(), 2*time.Second)
+// 	defer testCancel()
 
-	_, _ = client.GetUserByID(testCtx, &userv1.GetUserByIDRequest{Id: 999999})
-	// Игнорируем ошибку - нам важно только установить соединение
+// 	_, _ = client.GetUserByID(testCtx, &userv1.GetUserByIDRequest{Id: 999999})
+// 	// Игнорируем ошибку - нам важно только установить соединение
 
-	conn.Close()
-	log.Println("✅ gRPC connection test successful")
-	return nil
-}
+// 	conn.Close()
+// 	log.Println("✅ gRPC connection test successful")
+// 	return nil
+// }
