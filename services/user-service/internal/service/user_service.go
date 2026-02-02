@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
-	// "time"
-
-	// "regexp"
-
 	"github.com/DmitriiPro/user-service/internal/cache"
 	"github.com/DmitriiPro/user-service/internal/model"
 	"github.com/DmitriiPro/user-service/internal/repository"
@@ -36,11 +31,6 @@ type ClientWrapper struct {
 func NewUserService(repo repository.UserRepository, cache cache.Cache) UserService {
 	return &userService{repo: repo, cache: cache}
 }
-
-// func isValidEmail(email string) bool {
-// 	re := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-// 	return re.MatchString(email)
-// }
 
 func (s *userService) CreateUser(ctx context.Context, email, password string) (int64, error) {
 	log.Printf("Service: CreateUser called for email: %s", email)

@@ -21,12 +21,6 @@ func NewPostgres(dsn string) *sql.DB {
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetConnMaxIdleTime(2 * time.Minute)
 
-	// if err := db.Ping(); err != nil {
-	// 	log.Fatalf("postgres ping not responding: %v", err)
-	// }
-
-	// fmt.Println("Postgres connected")
-
 	// Пинг с ретраями
 	var pingErr error
 	for i := 0; i < 5; i++ {
