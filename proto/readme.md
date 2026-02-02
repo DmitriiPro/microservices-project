@@ -10,6 +10,9 @@ go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.
 
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.27.3
 
+# для валидации в файле proto
+go install github.com/envoyproxy/protoc-gen-validate@latest
+
 Проверка: 
 
 protoc-gen-go --version
@@ -31,3 +34,13 @@ make
 В папке proto/:
 
 git clone https://github.com/googleapis/googleapis
+
+Скачать .proto файлы PGV
+
+PGV хранит свои .proto в репозитории:
+
+# Перейдем в proto-директорию проекта
+cd proto/
+
+# Скачиваем PGV proto файлы
+git clone https://github.com/envoyproxy/protoc-gen-validate.git validate

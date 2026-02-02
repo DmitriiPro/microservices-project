@@ -1,25 +1,26 @@
 .PHONY: all user
 
 PROTO_SRC=.
-GOOGLEAPIS_DIR=./googleapis
+GOOGLEAPIS_DIR=./google
+VALIDATE_DIR=./validate
 PROTO_OUT=../services/user-service/internal/pb
 PROTOC=protoc
 
 all: user
 
 user:
-	@echo "Generating Go + gRPC + Gateway..."
+	@echo "Generating Go + gRPC + Gateway + Validator..."
 	mkdir -p $(PROTO_OUT)
 
 	$(PROTOC) \
 		--proto_path=$(PROTO_SRC) \
 		--proto_path=$(GOOGLEAPIS_DIR) \
-		--go_out=$(PROTO_OUT) \
-		--go_opt=paths=source_relative \
-		--go-grpc_out=$(PROTO_OUT) \
-		--go-grpc_opt=paths=source_relative \
-		--grpc-gateway_out=$(PROTO_OUT) \
-		--grpc-gateway_opt=paths=source_relative \
+		--proto_path=$(VALIDATE_DIR) \
+		--go_out=paths=source_relative:$(PROTO_OUT) \
+		--go-grpc_out=paths=source_relative:$(PROTO_OUT) \
+		--grpc-gateway_out=paths=source_relative:$(PROTO_OUT) \
+		--validate_out=lang=go,paths=source_relative:$(PROTO_OUT) \
 		user/user.proto
+
 
 	@echo "Done!"
