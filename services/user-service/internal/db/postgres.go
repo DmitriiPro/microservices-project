@@ -16,9 +16,10 @@ func NewPostgres(dsn string) *sql.DB {
 	}
 
 	// Установите настройки пула соединений
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(10)
 	db.SetConnMaxLifetime(5 * time.Minute)
+	db.SetConnMaxIdleTime(2 * time.Minute)
 
 	// if err := db.Ping(); err != nil {
 	// 	log.Fatalf("postgres ping not responding: %v", err)
