@@ -1,33 +1,26 @@
 .PHONY: all user
 
-# Путь к исходным proto
 PROTO_SRC=.
-
-# Куда генерируем Go-код (внутри user-service)
+GOOGLEAPIS_DIR=./google
+VALIDATE_DIR=./validate
 PROTO_OUT=../services/user-service/internal/pb
-
-# Префикс для пакета
-PROTO_PKG=userv1
-
-# Протокол компилятор (если в PATH)
 PROTOC=protoc
 
-# Все proto
-PROTO_FILES=$(shell find $(PROTO_SRC)/user -name "*.proto")
-
-# По умолчанию генерируем user
 all: user
 
 user:
-	@echo "Generating Go files from proto..."
+	@echo "Generating Go + gRPC + Gateway + Validator..."
 	mkdir -p $(PROTO_OUT)
-	protoc \
+
+	$(PROTOC) \
 		--proto_path=$(PROTO_SRC) \
-		--go_out=$(PROTO_OUT) \
-		--go_opt=paths=source_relative \
-		--go-grpc_out=$(PROTO_OUT) \
-		--go-grpc_opt=paths=source_relative \
-		--grpc-gateway_out=$(PROTO_OUT) \
-		--grpc-gateway_opt=paths=source_relative \
+		--proto_path=$(GOOGLEAPIS_DIR) \
+		--proto_path=$(VALIDATE_DIR) \
+		--go_out=paths=source_relative:$(PROTO_OUT) \
+		--go-grpc_out=paths=source_relative:$(PROTO_OUT) \
+		--grpc-gateway_out=paths=source_relative:$(PROTO_OUT) \
+		--validate_out=lang=go,paths=source_relative:$(PROTO_OUT) \
 		user/user.proto
+
+
 	@echo "Done!"
