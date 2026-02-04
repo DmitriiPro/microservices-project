@@ -1,0 +1,122 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "order/order.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "OrderService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/orders": {
+      "post": {
+        "operationId": "OrderService_CreateOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1OrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OrderService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CreateOrderRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "product": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1OrderResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "userId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "product": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "string",
+          "format": "int64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}
